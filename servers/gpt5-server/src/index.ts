@@ -22,9 +22,9 @@ const envPath = path.join(__dirname, '../../.env');
 dotenv.config({ path: envPath });
 console.error("Environment loaded from:", envPath);
 
-// Schema definitions
+// Schema definitions using Zod v4 patterns
 const GPT5GenerateSchema = z.object({
-  input: z.string().describe("The input text or prompt for GPT-5"),
+  input: z.string({ error: "Input text or prompt is required" }).describe("The input text or prompt for GPT-5"),
   model: z.string().optional().default("gpt-5").describe("GPT-5 model variant to use"),
   instructions: z.string().optional().describe("System instructions for the model"),
   reasoning_effort: z.enum(['low', 'medium', 'high']).optional().describe("Reasoning effort level"),
@@ -35,9 +35,9 @@ const GPT5GenerateSchema = z.object({
 
 const GPT5MessagesSchema = z.object({
   messages: z.array(z.object({
-    role: z.enum(['user', 'developer', 'assistant']).describe("Message role"),
-    content: z.string().describe("Message content")
-  })).describe("Array of conversation messages"),
+    role: z.enum(['user', 'developer', 'assistant'], { error: "Role must be user, developer, or assistant" }).describe("Message role"),
+    content: z.string({ error: "Message content is required" }).describe("Message content")
+  }), { error: "Messages array is required" }).describe("Array of conversation messages"),
   model: z.string().optional().default("gpt-5").describe("GPT-5 model variant to use"),
   instructions: z.string().optional().describe("System instructions for the model"),
   reasoning_effort: z.enum(['low', 'medium', 'high']).optional().describe("Reasoning effort level"),
@@ -60,7 +60,7 @@ async function main() {
     process.exit(1);
   }
 
-  // Create MCP server
+  // Create MCP server (using backwards compatible API)
   const server = new Server({
     name: "gpt5-server",
     version: "0.1.0"
@@ -71,7 +71,7 @@ async function main() {
   });
 
   // Set up error handling
-  server.onerror = (error) => {
+  server.onerror = (error: Error) => {
     console.error("MCP Server Error:", error);
   };
 
@@ -80,7 +80,7 @@ async function main() {
     process.exit(0);
   });
 
-  // Set up tool handlers
+  // Set up tool handlers (using backwards compatible API with updated schemas)
   server.setRequestHandler(
     ListToolsRequestSchema,
     async () => {
@@ -90,12 +90,12 @@ async function main() {
           {
             name: "gpt5_generate",
             description: "Generate text using OpenAI GPT-5 API with a simple input prompt",
-            inputSchema: zodToJsonSchema(GPT5GenerateSchema),
+            inputSchema: zodToJsonSchema(GPT5GenerateSchema as any),
           },
           {
             name: "gpt5_messages",
             description: "Generate text using GPT-5 with structured conversation messages",
-            inputSchema: zodToJsonSchema(GPT5MessagesSchema),
+            inputSchema: zodToJsonSchema(GPT5MessagesSchema as any),
           },
         ]
       };
