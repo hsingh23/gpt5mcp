@@ -55,7 +55,7 @@ OPENAI_API_KEY=your-openai-api-key-here
 ### Add the Server to Claude Code
 
 ```bash
-claude mcp add gpt5-server -- node /Users/hisingh1/projects/gpt5mcp/servers/gpt5-server/build/index.js
+claude mcp add gpt5-server -e OPENAI_API_KEY=$OPEN_API_KEY -- node /Users/hisingh1/projects/gpt5mcp/servers/gpt5-server/build/index.js
 ```
 
 ### Verify Installation
